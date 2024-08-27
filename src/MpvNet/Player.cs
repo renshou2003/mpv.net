@@ -1,6 +1,7 @@
 ﻿
 using System.Drawing;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
@@ -109,7 +110,7 @@ public class MainPlayer : MpvClient
         SetPropertyString("osc", "yes");
         SetPropertyString("config-dir", ConfigFolder);
         SetPropertyString("config", "yes");
-        
+
         UsedInputConfContent = App.InputConf.GetContent();
 
         if (!string.IsNullOrEmpty(UsedInputConfContent))
@@ -155,9 +156,14 @@ public class MainPlayer : MpvClient
 
         SetPropertyString("user-data/frontend/name", "mpv.net");
         SetPropertyString("user-data/frontend/version", AppInfo.Version.ToString());
+#if NET
         SetPropertyString("user-data/frontend/process-path", Environment.ProcessPath!);
+#else
+        SetPropertyString("user-data/frontend/process-path", Assembly.GetEntryAssembly().Location!);
+#endif
 
-        ObservePropertyBool("pause", value => {
+        ObservePropertyBool("pause", value =>
+        {
             Paused = value;
             Pause?.Invoke();
         });
@@ -173,7 +179,8 @@ public class MainPlayer : MpvClient
             }
         });
 
-        ObservePropertyInt("playlist-pos", value => {
+        ObservePropertyInt("playlist-pos", value =>
+        {
             PlaylistPos = value;
             PlaylistPosChanged?.Invoke(value);
 
@@ -236,8 +243,10 @@ public class MainPlayer : MpvClient
 
     string? _configFolder;
 
-    public string ConfigFolder {
-        get {
+    public string ConfigFolder
+    {
+        get
+        {
             if (_configFolder == null)
             {
                 string? mpvnet_home = Environment.GetEnvironmentVariable("MPVNET_HOME");
@@ -252,7 +261,8 @@ public class MainPlayer : MpvClient
 
                 if (!Directory.Exists(_configFolder))
                 {
-                    try {
+                    try
+                    {
                         using Process proc = new Process();
                         proc.StartInfo.UseShellExecute = false;
                         proc.StartInfo.CreateNoWindow = true;
@@ -260,7 +270,8 @@ public class MainPlayer : MpvClient
                         proc.StartInfo.Arguments = $@"-Command New-Item -Path '{_configFolder}' -ItemType Directory";
                         proc.Start();
                         proc.WaitForExit();
-                    } catch (Exception) {}
+                    }
+                    catch (Exception) { }
 
                     if (!Directory.Exists(_configFolder))
                         Directory.CreateDirectory(_configFolder);
@@ -275,7 +286,8 @@ public class MainPlayer : MpvClient
 
     Dictionary<string, string>? _Conf;
 
-    public Dictionary<string, string> Conf {
+    public Dictionary<string, string> Conf
+    {
         get
         {
             if (_Conf != null)
@@ -443,6 +455,7 @@ public class MainPlayer : MpvClient
 
             string ext = file.Ext();
 
+#if NET
             if (OperatingSystem.IsWindows())
             {
                 switch (ext)
@@ -451,10 +464,17 @@ public class MainPlayer : MpvClient
                     case "lnk": file = GetShortcutTarget(file); break;
                 }
             }
+#elif NETFRAMEWORK
+            switch (ext)
+            {
+                case "avs": LoadAviSynth(); break;
+                case "lnk": file = GetShortcutTarget(file); break;
+            }
+#endif
 
             if (ext == "iso")
                 LoadISO(file);
-            else if(FileTypes.Subtitle.Contains(ext))
+            else if (FileTypes.Subtitle.Contains(ext))
                 CommandV("sub-add", file);
             else
             {
@@ -483,7 +503,7 @@ public class MainPlayer : MpvClient
     public void LoadISO(string path)
     {
         using var mi = new MediaInfo(path);
-        
+
         if (mi.GetGeneral("Format") == "ISO 9660 / DVD Video")
         {
             Command("stop");
@@ -543,9 +563,12 @@ public class MainPlayer : MpvClient
 
             List<string> files = FileTypes.GetMediaFiles(Directory.GetFiles(dir)).ToList();
 
+#if NET
             if (OperatingSystem.IsWindows())
                 files.Sort(new StringLogicalComparer());
-
+#elif NETFRAMEWORK
+            files.Sort(new StringLogicalComparer());
+#endif
             int index = files.IndexOf(path);
             files.Remove(path);
 
@@ -559,9 +582,14 @@ public class MainPlayer : MpvClient
 
     bool _wasAviSynthLoaded;
 
+#if NET
     [SupportedOSPlatform("windows")]
+#endif
     void LoadAviSynth()
     {
+#if NETSTANDARD
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+#endif
         if (!_wasAviSynthLoaded)
         {
             string? dll = Environment.GetEnvironmentVariable("AviSynthDLL");  // StaxRip sets it in portable mode
@@ -573,9 +601,14 @@ public class MainPlayer : MpvClient
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     static extern IntPtr LoadLibrary(string path);
 
+#if NET
     [SupportedOSPlatform("windows")]
+#endif
     public static string GetShortcutTarget(string path)
     {
+#if NETSTANDARD
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return string.Empty;
+#endif
         Type? t = Type.GetTypeFromProgID("WScript.Shell");
         dynamic? sh = Activator.CreateInstance(t!);
         return sh?.CreateShortcut(path).TargetPath!;
@@ -634,8 +667,10 @@ public class MainPlayer : MpvClient
         }
     }
 
-    public List<StringPair> AudioDevices {
-        get {
+    public List<StringPair> AudioDevices
+    {
+        get
+        {
             if (_audioDevices != null)
                 return _audioDevices;
 
@@ -654,7 +689,8 @@ public class MainPlayer : MpvClient
         }
     }
 
-    public List<Chapter> GetChapters() {
+    public List<Chapter> GetChapters()
+    {
         List<Chapter> chapters = new List<Chapter>();
         int count = GetPropertyInt("chapter-list/count");
 
@@ -675,7 +711,7 @@ public class MainPlayer : MpvClient
     }
 
     public void UpdateExternalTracks()
-    { 
+    {
         int trackListTrackCount = GetPropertyInt("track-list/count");
         int editionCount = GetPropertyInt("edition-list/count");
         int count = MediaTracks.Where(i => i.Type != "g").Count();

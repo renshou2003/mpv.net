@@ -68,8 +68,11 @@ public partial class StringSettingControl : UserControl, ISettingControl
         {
             case "folder":
                 {
+#if NET
                     var dialog = new Forms.FolderBrowserDialog { InitialDirectory = ValueTextBox.Text };
-
+#elif NETFRAMEWORK
+                    var dialog = new Forms.FolderBrowserDialog { SelectedPath = ValueTextBox.Text };
+#endif
                     if (dialog.ShowDialog() == Forms.DialogResult.OK)
                         ValueTextBox.Text = dialog.SelectedPath;
                 }

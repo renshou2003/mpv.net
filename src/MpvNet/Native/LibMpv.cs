@@ -14,8 +14,11 @@ public static class LibMpv
     public static extern nint mpv_create();
 
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
+#if NET
     public static extern nint mpv_create_client(nint mpvHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string command);
-
+#elif NETFRAMEWORK || NETSTANDARD
+    public static extern nint mpv_create_client(nint mpvHandle, [MarshalAs(48)] string command);
+#endif
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern mpv_error mpv_initialize(nint mpvHandle);
 
@@ -26,8 +29,11 @@ public static class LibMpv
     public static extern mpv_error mpv_command(nint mpvHandle, nint strings);
 
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
+#if NET
     public static extern mpv_error mpv_command_string(nint mpvHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string command);
-
+#elif NETFRAMEWORK || NETSTANDARD
+    public static extern mpv_error mpv_command_string(nint mpvHandle, [MarshalAs(48)] string command);
+#endif
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern mpv_error mpv_command_ret(nint mpvHandle, nint strings, nint node);
 
@@ -38,8 +44,11 @@ public static class LibMpv
     public static extern nint mpv_error_string(mpv_error error);
 
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
+#if NET
     public static extern mpv_error mpv_request_log_messages(nint mpvHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string min_level);
-
+#elif NETFRAMEWORK || NETSTANDARD
+    public static extern mpv_error mpv_request_log_messages(nint mpvHandle, [MarshalAs(48)] string min_level);
+#endif
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern int mpv_set_option(nint mpvHandle, byte[] name, mpv_format format, ref long data);
 
@@ -62,8 +71,11 @@ public static class LibMpv
     public static extern mpv_error mpv_set_property(nint mpvHandle, byte[] name, mpv_format format, ref double data);
 
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
+#if NET
     public static extern mpv_error mpv_observe_property(nint mpvHandle, ulong reply_userdata, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, mpv_format format);
-
+#elif NETFRAMEWORK || NETSTANDARD
+    public static extern mpv_error mpv_observe_property(nint mpvHandle, ulong reply_userdata, [MarshalAs(48)] string name, mpv_format format);
+#endif
     [DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern int mpv_unobserve_property(nint mpvHandle, ulong registered_reply_userdata);
 

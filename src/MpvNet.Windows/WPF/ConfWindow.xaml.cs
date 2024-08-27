@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -92,8 +93,11 @@ public partial class ConfWindow : Window, INotifyPropertyChanged
         if (string.IsNullOrEmpty(path))
             return null;
 
+#if NET
         string[] parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
+#elif NETFRAMEWORK
+        string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+#endif
         for (int x = 0; x < parts.Length; x++)
         {
             bool found = false;
@@ -236,10 +240,10 @@ public partial class ConfWindow : Window, INotifyPropertyChanged
                 string left = line.Substring(0, pos).Trim().ToLower().TrimStart('-');
                 string right = line.Substring(pos + 1).Trim();
                 
-                if (right.StartsWith('\'') && right.EndsWith('\''))
+                if (right.StartsWith("\'") && right.EndsWith("\'"))
                     right = right.Trim('\'');
 
-                if (right.StartsWith('"') && right.EndsWith('"'))
+                if (right.StartsWith("\"") && right.EndsWith("\""))
                     right = right.Trim('"');
 
                 if (left == "fs")
@@ -267,8 +271,7 @@ public partial class ConfWindow : Window, INotifyPropertyChanged
             if ((setting.Value ?? "") != setting.Default)
                 pairs.Add(setting.Name + "=" + EscapeValue(setting.Value!));
         }
-
-        return string.Join(',', pairs);
+        return string.Join(",", pairs);
     }
 
     void LoadLibplaceboConf()
@@ -280,7 +283,7 @@ public partial class ConfWindow : Window, INotifyPropertyChanged
 
     void LoadKeyValueList(string options, string file)
     {
-        string[] optionStrings = options.Split(",", StringSplitOptions.RemoveEmptyEntries);
+        string[] optionStrings = options.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
         foreach (string pair in optionStrings)
         {

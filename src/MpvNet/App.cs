@@ -4,12 +4,13 @@ using CommunityToolkit.Mvvm.Messaging;
 using MpvNet.ExtensionMethod;
 using MpvNet.Help;
 using MpvNet.MVVM;
+using System.Reflection;
 
 namespace MpvNet;
 
 public class AppClass
 {
-    public List<string> TempFiles { get; } = new ();
+    public List<string> TempFiles { get; } = new();
 
     public string ConfPath { get => Player.ConfigFolder + "mpvnet.conf"; }
     public string ProcessInstance { get; set; } = "single";
@@ -44,7 +45,7 @@ public class AppClass
 
     public AppClass()
     {
-        _extensionManager.UnhandledException +=  ex => Terminal.WriteError(ex);
+        _extensionManager.UnhandledException += ex => Terminal.WriteError(ex);
 
         StrongReferenceMessenger.Default.Register<MainWindowIsLoadedMessage>(this, (r, msg) =>
         {
@@ -77,12 +78,23 @@ public class AppClass
         Player.Initialized += Player_Initialized;
     }
 
-    public static string About => "Copyright (C) 2000-2024 mpv.net/mpv/mplayer\n" +
-        $"{AppInfo.Product} v{AppInfo.Version}" + GetLastWriteTime(Environment.ProcessPath!) + "\n" +
-        $"{Player.GetPropertyString("mpv-version")}" + GetLastWriteTime(Folder.Startup + "libmpv-2.dll") + "\n" +
-        $"ffmpeg {Player.GetPropertyString("ffmpeg-version")}\n" +
-        $"MediaInfo v{FileVersionInfo.GetVersionInfo(Folder.Startup + "MediaInfo.dll").FileVersion}" +
-        $"{GetLastWriteTime(Folder.Startup + "MediaInfo.dll")}" + "\n" + "GPL v2 License";
+    public static string About
+    {
+        get
+        {
+#if NET
+            var processPath = Environment.ProcessPath!;
+#else
+            var processPath = Assembly.GetEntryAssembly().Location;
+#endif
+            return "Copyright (C) 2000-2024 mpv.net/mpv/mplayer\n" +
+            $"{AppInfo.Product} v{AppInfo.Version}" + GetLastWriteTime(processPath) + "\n" +
+            $"{Player.GetPropertyString("mpv-version")}" + GetLastWriteTime(Folder.Startup + "libmpv-2.dll") + "\n" +
+            $"ffmpeg {Player.GetPropertyString("ffmpeg-version")}\n" +
+            $"MediaInfo v{FileVersionInfo.GetVersionInfo(Folder.Startup + "MediaInfo.dll").FileVersion}" +
+            $"{GetLastWriteTime(Folder.Startup + "MediaInfo.dll")}" + "\n" + "GPL v2 License";
+        }
+    }
 
     static string GetLastWriteTime(string path) => $" ({File.GetLastWriteTime(path).ToShortDateString()})";
 
@@ -111,8 +123,10 @@ public class AppClass
 
     Dictionary<string, string>? _Conf;
 
-    public Dictionary<string, string> Conf {
-        get {
+    public Dictionary<string, string> Conf
+    {
+        get
+        {
             if (_Conf == null)
             {
                 _Conf = new Dictionary<string, string>();

@@ -243,8 +243,13 @@ public class GuiCommand
 
         try
         {
+#if NET
+            string exePath = Environment.ProcessPath!;
+#elif NETFRAMEWORK
+            string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
+#endif
             using Process proc = new Process();
-            proc.StartInfo.FileName = Environment.ProcessPath;
+            proc.StartInfo.FileName = exePath;
             proc.StartInfo.Arguments = "--register-file-associations " +
                 perceivedType + " " + string.Join(" ", extensions);
             proc.StartInfo.Verb = "runas";

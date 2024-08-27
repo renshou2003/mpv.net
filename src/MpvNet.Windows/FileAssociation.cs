@@ -9,7 +9,11 @@ public static class FileAssociation
 {
     public static void Register(string perceivedType, string[] extensions)
     {
+#if NET
         string exePath = Environment.ProcessPath!;
+#elif NETFRAMEWORK
+        string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
+#endif
         string exeFilename = Path.GetFileName(exePath);
         string exeFilenameNoExt = Path.GetFileNameWithoutExtension(exePath);
 

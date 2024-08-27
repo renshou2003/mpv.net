@@ -1,13 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net462;net6.0;netstandard2.0</TargetFrameworks>
 		<AssemblyName>libmpvnet</AssemblyName>
 		<Product>mpv.net</Product>
 		<Nullable>enable</Nullable>
 		<RootNamespace>MpvNet</RootNamespace>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<!--<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>-->
+		<LangVersion>11.0</LangVersion>
     </PropertyGroup>
+
+	<ItemGroup Condition=" $(TargetFramework.StartsWith('net462')) ">
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
+		<PackageReference Include="PolySharp" Version="1.14.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup Condition=" $(TargetFramework.StartsWith('netstandard2')) ">
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
+		<PackageReference Include="PolySharp" Version="1.14.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
     <ItemGroup>
       <None Include="..\..\docs\changelog.md" Link="Docs\changelog.md" />
